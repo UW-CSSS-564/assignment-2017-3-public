@@ -9,7 +9,7 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="Sheridan Grant" />
+<meta name="author" content="Jeff Arnold, Sheridan Grant" />
 
 
 <title>STAT/CSSS 564: Assignment 3</title>
@@ -117,34 +117,82 @@ $(document).ready(function () {
 
 
 <h1 class="title toc-ignore">STAT/CSSS 564: Assignment 3</h1>
-<h4 class="author"><em>Sheridan Grant</em></h4>
-<h4 class="date"><em>May 2, 2017</em></h4>
+<h4 class="author"><em>Jeff Arnold, Sheridan Grant</em></h4>
+<h4 class="date"><em>May 2nd, 2017</em></h4>
 
 </div>
 
 
-<div id="instructions" class="section level2">
-<h2>Instructions</h2>
 <ol style="list-style-type: decimal">
 <li>Fork this repository to your account</li>
 <li>Edit the file <code>solutions.Rmd</code> with your solutions to the problems.</li>
 <li>Submit a pull request to have it graded. Include either or both a HTML and PDF file.</li>
 </ol>
-<p>For updates and questions follow the Slack channel: <a href="https://uwcsss564.slack.com/messages/C57PFSG1Z/">#assignment3</a>.</p>
+<p>For updates and questions follow the Slack channel: <a href="https://uwcsss564.slack.com/messages/C57PFSG1Z/">#assignment3</a></p>
 <p>This assignment will require the following R packages:</p>
 <pre class="r"><code>library(&quot;rstan&quot;)
 library(&quot;reshape2&quot;)</code></pre>
-</div>
 <div id="problem-1" class="section level2">
 <h2>Problem 1</h2>
 <p>This problem is based on Bayesian Data Analysis 3 (Gelman et al.) chapter 17 exercises 2 and 3; some of the questions will be verbatim, others tweaked to more closely align with the material from this class.</p>
-<p>As part of their analysis of the Federalist papers, Mosteller and Wallace (1964) recorded the frequency of use of various words in selected articles by Alexander Hamilton and James Madison. The articles were divided into blocks of about 200 words each, and the number of instances of various words in each block were recorded. <strong>may.csv</strong> contains data on the occurence of the word “may” in these papers, with the columns indicating the number of occurences of “may” in a text block, rows the author, and entries the number of blocks in which the word “may” occurred the given number of times for the given author.</p>
+<p>As part of their analysis of the Federalist Papers, Mosteller and Wallace (1964) recorded the frequency of use of various words in selected articles by Alexander Hamilton and James Madison. The articles were divided into blocks of about 200 words each, and the number of instances of various words in each block were recorded. <strong>may.csv</strong> contains data on the occurence of the word “may” in these papers, with the columns indicating the number of occurences of “may” in a text block, rows the author, and entries the number of blocks in which the word “may” occurred the given number of times for the given author.</p>
 <pre class="r"><code>may &lt;- read.csv('may.csv', header = T, row.names = 1)</code></pre>
 <p><strong>Q1:</strong> in Stan, fit a Bayesian Poisson GLM to these data, with a different parameter for each author and an uninformative prior. Summarize the posterior distributions for each parameter and plot histograms.</p>
-<p><strong>Q2:</strong> in Stan, fit a negative binomial GLM to the data with different parameters for each author and a noninformative prior distribution. Defend your choice of prior. For each author, plot the joint posterior distribution of the two associated parameters with a contour plot (elipses indicating the density around that elipse) or a density plot (colors, with darking meaning higher density at that point).</p>
+<p><strong>Q2:</strong> in Stan, fit a Negative Binomial GLM to the data with different parameters for each author and a noninformative prior distribution. Defend your choice of prior. For each author, plot the joint posterior distribution of the two associated parameters with a contour plot (elipses indicating the density around that elipse) or a density plot (colors, with darking meaning higher density at that point).</p>
 <p><strong>Q3:</strong> using the “generated quantities” block of the Stan model, generate posterior predictive distributions for both authors for both model types. Compare the posterior predictive distributions to the distribution of the actual data. Does the fit seem reasonable? Which model appears to be more reasonable?</p>
 <p>Another reasonable way of checking model fit is to explicitly define a test statistic and perform a hypothesis test. The test statistic is, at its simplest, a function of just the data. For instance, it might be the average of the observations. To perform a hypothesis test, you simply compare the value of the test statistic from the original data to the distribution of the test statistic under the model (i.e. the posterior predictive distribution). To do this, you can simply simulate the posterior predictive many times (say, 5000) and calculate the test statistic for each simulation. If the test statistic for the observed data is far in one of the tails of the sampling from the posterior predictive, there is an indication that your model does not fit the data as well as you might hope.</p>
 <p><strong>Q4:</strong> define a test statistic for these data and justify its use (for instance, taking the sum of the cosines of the data as a test statistic would be stupid). Then, for Hamilton, perform a hypothesis test on this test statistic as outlined above, and conclude with a proper interpretation.</p>
+</div>
+<div id="statistical-simulation" class="section level1">
+<h1>Statistical Simulation</h1>
+<p>Read <span class="citation">@KingTomzWittenberg2000a</span>. They propose a statistical simulation approach for interpreting statistical analysis; see section “Simulation-Based Approaches to Interpretation”. Compare and contrast this to a full Bayesian approach.</p>
+</div>
+<div id="student-t-prior" class="section level1">
+<h1>Student-t Prior</h1>
+<p>The robust regression with Student-t error example uses the following prior on the degrees of freedom parameter. <span class="math display">\[
+\nu \sim Gamma(2, 0.01)
+\]</span> The Student-t distribution is used because it has wider tails and thus is less sensitive to outliers than a normal distribution. However, the researcher generally has no information about the value of the degrees of freedom.</p>
+<ol style="list-style-type: decimal">
+<li>Plot this prior distribution, and the values of the 5th and 95th quantiles. You can use <code>dgamma(x, 2, scale = 0.01)</code> and <code>qgamma(x, 2, scale = 0.01)</code>. What is</li>
+<li>Additionally, the prior is truncated at 2. Why? Hint: What moments of the Student-t distribution are not-defined for values between 2.</li>
+</ol>
+</div>
+<div id="student-t-as-a-mixture-of-normals" class="section level1">
+<h1>Student-t as a Mixture of Normals</h1>
+<p>The Student-t distribution is a scale mixture of normals.<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> This means that a Student-t distribution can be represented as normal distributions in which the variances are drawn from different distributions. Suppose <span class="math inline">\(X\)</span> is distributed Student-t with degrees of freedom <span class="math inline">\(\nu\)</span>, location <span class="math inline">\(\mu\)</span>, and scale <span class="math inline">\(\sigma\)</span>, <span class="math display">\[
+X \sim t_{\nu}(\mu, \sigma) .
+\]</span> Samples from <span class="math inline">\(Y\)</span> can be drawn by <span class="math display">\[
+x_i \sim N(\mu, \lambda_i^2 \gamma^2) 
+\]</span> If the local variance parameters are distributed inverse-gamma <span class="math display">\[
+1 / \lambda^2 \sim \text{Gamma}(\nu / 2, \nu / 2) .
+\]</span></p>
+<p>Many distributions used in regression shrinkage: Double Exponential (Laplace), and Hierarchical Shrinkage (Horseshoe), have this representation.</p>
+<p>You can draw a sample from this:</p>
+<pre class="r"><code>df &lt;- 10
+n &lt;- 1000
+sigma &lt;- rgamma(n, 0.5 * df, 0.5 * df)
+x &lt;- rnorm(n, sd = sqrt(1 / sigma ^ 2))</code></pre>
+<p>Plot samples drawn in this way against either samples or theoretical values of the Student-t distribution. Try a few values of the degrees of freedom. Try something small (3) and large (100).</p>
+<p>You can draw samples directly from a Student-t with <code>rt</code>. A quantile-quantile plot (<a href="http://ggplot2.tidyverse.org/reference/geom_qq.html">geom_qq</a>) or a density plot with the function (<a href="http://ggplot2.tidyverse.org/reference/geom_density.html">geom_density</a> and <a href="http://ggplot2.tidyverse.org/reference/stat_function.html">stat_function</a>).</p>
+<p>Note: there isn’t a right answer to this. Well, actually, there is, and you know it. They are equivalent, a proof is in the link. So for credit, do a little work, and show it. This pattern appears often, so wrap your head around it.</p>
+</div>
+<div id="separation" class="section level1">
+<h1>Separation</h1>
+<p>Continue what was covered in class.</p>
+</div>
+<div id="transformations-of-coefficients" class="section level1">
+<h1>Transformations of Coefficients</h1>
+<p><span class="citation">@Rainey2016b</span> notes that unbiased estimators of parameters does not imply that transformations of those parameters are unbiased estimators.</p>
+</div>
+<div id="poisson-and-negative-binomial-example" class="section level1">
+<h1>Poisson and Negative Binomial Example</h1>
+<p>Fill in</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>mix<a href="#fnref1">↩</a></p></li>
+</ol>
 </div>
 
 
