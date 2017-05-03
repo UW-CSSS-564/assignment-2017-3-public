@@ -25,8 +25,8 @@ were divided into blocks of approximately 200 words each, and the number
 of instances of various words in each block were recorded. For
 authorship attribution, they are concerned with the frequency of
 [frequency words](https://en.wikipedia.org/wiki/Function_word). The file
-`data/federalist.csv`contains data on the occurence of the word "may" in
-these papers.\[^federalist\]
+`data/federalist.csv`contains data on the occurrence of the word "may"
+in these papers.\[^federalist\]
 
 \[federalist\]: This problem is based on Bayesian Data Analysis 3 Gelman
 et al. (2013 Ch. 17, Ex. 2 and 3).
@@ -57,12 +57,12 @@ et al. (2013 Ch. 17, Ex. 2 and 3).
     ## 13  Madison     5      1
     ## 14  Madison     6      1
 
-Expand the dataset to have one observation per occurence. This data will
-be easier to work with given the Stan models seen thus far. However, it
-would be more effeicient to work with the original data (though the
-model may seem more confusing). The following code creates on
-observation per block, per author, with a single variable indicating the
-occurences:
+Expand the dataset to have one observation per occurrence. This data
+will be easier to work with given the Stan models seen thus far.
+However, it would be more efficient to work with the original data
+(though the model may seem more confusing). The following code creates
+on observation per block, per author, with a single variable indicating
+the occurrences:
 
     may_long <- may %>%
       mutate(occur = map2(count, number, rep)) %>%
@@ -138,7 +138,7 @@ occurences:
     model would have much different results? What are some advantages or
     disadvantages of the Poisson or Negative Binomial models?
 
-8.  For each model, calculate the probability that hamilton used the
+8.  For each model, calculate the probability that Hamilton used the
     word "may" more often. This can be done outside the Stan model, by
     extracting the parameters from the `stanfit` object, or within the
     Stan model, by adding a new variable (the best place to put it would
@@ -176,8 +176,8 @@ occurences:
         model has the better predictive fit?
 
 12. The previous analysis could potentially be used for model selection.
-    However, model choice effecively puts zero probability on some types
-    of models, violating [Cromwell's
+    However, model choice effectively puts zero probability on some
+    types of models, violating [Cromwell's
     rule](https://en.wikipedia.org/wiki/Cromwell%27s_rule). Another
     approach is *continuous model expansion*, which is to build a larger
     model that incorporates special cases and thus allows for model
@@ -214,11 +214,11 @@ of freedom. So why was this distribution chosen?
 Student-t as a Mixture of Normals
 =================================
 
-The Student-t distribution is a scale mixture of normals.[1] This means
-that a Student-t distribution can be represented as normal distributions
-in which the variances are drawn from different distributions. Suppose
-*X* is distributed Student-t with degrees of freedom *ν*, location *μ*,
-and scale *σ*,
+The Student-t distribution is a scale mixture of normal
+distributions.[1] This means that a Student-t distribution can be
+represented as normal distributions in which the variances are drawn
+from different distributions. Suppose *X* is distributed Student-t with
+degrees of freedom *ν*, location *μ*, and scale *σ*,
 *X* ∼ *t*<sub>*ν*</sub>(*μ*, *σ*).
  Samples from *Y* can be drawn by
 *x*<sub>*i*</sub> ∼ *N*(*μ*, *λ*<sub>*i*</sub><sup>2</sup>*γ*<sup>2</sup>)
