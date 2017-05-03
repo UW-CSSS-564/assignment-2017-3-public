@@ -1,0 +1,40 @@
+---
+title: 'STAT/CSSS 564: Assignment 3'
+author: Sheridan Grant
+output: html_document
+date: "May 2, 2017"
+---
+
+## Instructions
+
+1. Fork this repository to your account
+2. Edit the file `solutions.Rmd` with your solutions to the problems.
+3. Submit a pull request to have it graded. Include either or both a HTML and PDF file.
+
+For updates and questions follow the Slack channel: [#assignment3](https://uwcsss564.slack.com/messages/C57PFSG1Z/).
+
+This assignment will require the following R packages:
+```{r, message=FALSE}
+library("rstan")
+library("reshape2")
+```
+
+## Problem 1
+
+This problem is based on Bayesian Data Analysis 3 (Gelman et al.) chapter 17 exercises 2 and 3; some of the questions will be verbatim, others tweaked to more closely align with the material from this class.
+
+As part of their analysis of the Federalist Papers, Mosteller and Wallace (1964) recorded the frequency of use of various words in selected articles by Alexander Hamilton and James Madison. The articles were divided into blocks of about 200 words each, and the number of instances of various words in each block were recorded. **may.csv** contains data on the occurence of the word "may" in these papers, with the columns indicating the number of occurences of "may" in a text block, rows the author, and entries the number of blocks in which the word "may" occurred the given number of times for the given author.
+
+```{r}
+may <- read.csv('may.csv', header = T, row.names = 1)
+```
+
+**Q1:** in Stan, fit a Bayesian Poisson GLM to these data, with a different parameter for each author and an uninformative prior. Summarize the posterior distributions for each parameter and plot histograms.
+
+**Q2:** in Stan, fit a Negative Binomial GLM to the data with different parameters for each author and a noninformative prior distribution. Defend your choice of prior. For each author, plot the joint posterior distribution of the two associated parameters with a contour plot (elipses indicating the density around that elipse) or a density plot (colors, with darking meaning higher density at that point).
+
+**Q3:** using the "generated quantities" block of the Stan model, generate posterior predictive distributions for both authors for both model types. Compare the posterior predictive distributions to the distribution of the actual data. Does the fit seem reasonable? Which model appears to be more reasonable?
+
+Another reasonable way of checking model fit is to explicitly define a test statistic and perform a hypothesis test. The test statistic is, at its simplest, a function of just the data. For instance, it might be the average of the observations. To perform a hypothesis test, you simply compare the value of the test statistic from the original data to the distribution of the test statistic under the model (i.e. the posterior predictive distribution). To do this, you can simply simulate the posterior predictive many times (say, 5000) and calculate the test statistic for each simulation. If the test statistic for the observed data is far in one of the tails of the sampling from the posterior predictive, there is an indication that your model does not fit the data as well as you might hope.
+
+**Q4:** define a test statistic for these data and justify its use (for instance, taking the sum of the cosines of the data as a test statistic would be stupid). Then, for Hamilton, perform a hypothesis test on this test statistic as outlined above, and conclude with a proper interpretation.
