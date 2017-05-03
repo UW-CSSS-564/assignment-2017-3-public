@@ -1,9 +1,17 @@
 ---
 title: 'STAT/CSSS 564: Assignment 3'
 author: Jeff Arnold, Sheridan Grant
-output: html_document
+output: 
+  html_document:
+    number_sections: true
+  pdf_document:
+    number_sections: true    
+  md_document: default
+bibliography: assignment3.bib
 date: "May 2nd, 2017"
 ---
+
+# Instructions {-}
 
 1. Fork this repository to your account
 2. Edit the file `solutions.Rmd` with your solutions to the problems.
@@ -14,28 +22,101 @@ For updates and questions follow the Slack channel: [#assignment3](https://uwcss
 This assignment will require the following R packages:
 ```{r, message=FALSE}
 library("rstan")
-library("reshape2")
+library("bayesplot")
+library("tidyverse")
 ```
 
-## Problem 1
+# Poisson and Negative Binomial Models
 
-This problem is based on Bayesian Data Analysis 3 (Gelman et al.) chapter 17 exercises 2 and 3; some of the questions will be verbatim, others tweaked to more closely align with the material from this class.
+@MostellerWallace1963a analysis of the authorship of disputed letters in the *The Federalist Papers* records the the word frequency in selected articles by Alexander Hamilton and James Madison.
+The articles were divided into blocks of approximately 200 words each, and the number of instances of various words in each block were recorded. 
+For authorship attribution, they are concerned with the frequency of [frequency words](https://en.wikipedia.org/wiki/Function_word). The file `data/federalist.csv`contains data on the occurence of the word "may" in these papers.[^federalist]
 
-As part of their analysis of the Federalist Papers, Mosteller and Wallace (1964) recorded the frequency of use of various words in selected articles by Alexander Hamilton and James Madison. The articles were divided into blocks of about 200 words each, and the number of instances of various words in each block were recorded. **may.csv** contains data on the occurence of the word "may" in these papers, with the columns indicating the number of occurences of "may" in a text block, rows the author, and entries the number of blocks in which the word "may" occurred the given number of times for the given author.
+[federalist]: This problem is based on Bayesian Data Analysis 3 @BDA3 [Ch. 17, Ex. 2 and 3].
 
 ```{r}
-may <- read.csv('may.csv', header = T, row.names = 1)
+col_types <- cols(
+   author = col_character(),
+   count = col_integer(),
+   number = col_integer()
+)
+may <- read_csv('data/federalist.csv', col_types = col_types)
+may
 ```
 
-**Q1:** in Stan, fit a Bayesian Poisson GLM to these data, with a different parameter for each author and an uninformative prior. Summarize the posterior distributions for each parameter and plot histograms.
+Expand the dataset to have one observation per occurence.
+This data will be easier to work with given the Stan models seen thus far.
+However, it would be more effeicient to work with the original data (though the model may seem more confusing).
+The following code creates on observation per block, per author, with a single variable indicating the occurences:
+```{r}
+may_long <- may %>%
+  mutate(occur = map2(count, number, rep)) %>%
+  unnest(occur) %>%
+  select(author, occur) %>%
+  mutate(hamilton = as.integer(author == "hamilton"),
+         hamilton_scaled = hamilton - mean(hamilton))
+  
+glimpse(may_long)
+```
 
-**Q2:** in Stan, fit a Negative Binomial GLM to the data with different parameters for each author and a noninformative prior distribution. Defend your choice of prior. For each author, plot the joint posterior distribution of the two associated parameters with a contour plot (elipses indicating the density around that elipse) or a density plot (colors, with darking meaning higher density at that point).
 
-**Q3:** using the "generated quantities" block of the Stan model, generate posterior predictive distributions for both authors for both model types. Compare the posterior predictive distributions to the distribution of the actual data. Does the fit seem reasonable? Which model appears to be more reasonable?
+1. Fit a Poisson model (`stan/poisson.stan`) to these data with an intercept and a single indicator variable for `hamilton`:
+    $$
+    \begin{aligned}[t]
+    y_i &\sim \mathtt{Poisson}(\lambda_i) \\
+    \lambda_i &= \exp(a + b \times \mathtt{hamilton}_i) \\
+    a &\sim N(0, 10) \\
+    b &\sim N(0, 2.5)
+    \end{aligned}
+    $$
+  Remember to use the mean 0 scaled version of the Hamilton indicator variable.
 
-Another reasonable way of checking model fit is to explicitly define a test statistic and perform a hypothesis test. The test statistic is, at its simplest, a function of just the data. For instance, it might be the average of the observations. To perform a hypothesis test, you simply compare the value of the test statistic from the original data to the distribution of the test statistic under the model (i.e. the posterior predictive distribution). To do this, you can simply simulate the posterior predictive many times (say, 5000) and calculate the test statistic for each simulation. If the test statistic for the observed data is far in one of the tails of the sampling from the posterior predictive, there is an indication that your model does not fit the data as well as you might hope.
+2. Fit a Negative Binomial model (`stan/neg_binomial.stan`) to the data with different parameters for each author and a non-informative prior distribution.
+    $$
+    \begin{aligned}[t]
+    y_i &\sim \mathtt{Poisson}(\mu) \\
+    \lambda_i &= \exp(a + b \times \mathtt{hamilton}_i) \\
+    a &\sim N(0, 10) \\
+    b &\sim N(0, 2.5) \\
+    \end{aligned}
+    $$
+    Remember to use the mean 0 scaled version of the Hamilton indicator variable.
+  
+3. In these models, what is the support (domain) of the response variable? Of the linear predictors $a + b \times \mathtt{hamilton}$, and the expected value ($\lambda$ or $\mu$)? 
 
-**Q4:** define a test statistic for these data and justify its use (for instance, taking the sum of the cosines of the data as a test statistic would be stupid). Then, for Hamilton, perform a hypothesis test on this test statistic as outlined above, and conclude with a proper interpretation.
+4. Stan provides two parameterizations of the negative binomial distribution: `neg_binomial` and `neg_binomial_2`. Describe the parameters used in each, and how these parameters relate to each other. The model provided uses `neg_binomial_2`. What makes that a more convenient parameterization for our purposes.
+
+5. What does the $\phi$ parameter in the Negative Binomial model do? The Poisson model does not have an equivalent additional parameter; what constraint on the shape of the Poisson distribution does that impose?
+
+6. There are separate parameters for each author in these models. Is this any different than fitting a separate model for each author. Consider both the negative binomial and Poisson models.
+
+7. Both the Poisson and Negative Binomial Models are for "unbounded" counts, and thus allow for potentially infinite values. However, the description notes that each of these chunks has approximately 200 words, so the number of uses of the word "may" cannot be infinite in any particular chunk.
+  This suggests a third model, in which the response is modeled with a Binomial distribution,
+  ```
+  y ~ binomial(200, mu)
+  ```
+  Without actually running the models (though nothing is stopping you), would you expect that using a binomial model would have much different results? What are some advantages or disadvantages of the Poisson or Negative Binomial models?
+  
+8. For each model, calculate the probability that hamilton used the word "may" more often. This can be done outside the Stan model, by extracting the parameters from the `stanfit` object, or within the Stan model, by adding a new variable (the best place to put it would be the `generated quantities` block).
+
+8. The `generated quantities` blocks of these models simulate samples from the posterior predictive distribution, and store them in the `y_rep` variable. Plot the predictive posterior distributions for each model and compare them using the visual methods. See this [bayesplot vignette](https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html).
+
+9. Consider a reasonable test statistic for comparing the model to the data and calculate its posterior predictive p-value for each model. See this [bayesplot vignette](https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html).
+
+
+10. Compare the models using PSIS-LOO statistic. The LOO-PSIS is an estimator of a model's the *expected* log-likelihood of a new (out-of-sample) observation. Read the [loo vignette](https://cran.r-project.org/web/packages/loo/vignettes/loo-example.html) for more information.[^loo]. 
+WAIC, discussed in @McElreath2016a, is also an estimator of the expected out-of-sample error.
+However, @VehtariGelmanGabry2016a show that the more recently developed PSIS-LOO is not much more computationally burdensome and generally has better performance than WAIC.
+
+    1. Calculate the PSIS-LOO for each observation and interpret it. Use the `loo` function.
+    2. What does the value of `p_loo` mean? How does it compare to the actual number of parameters in the model? Why might it be different? Ex-ante, why would you expect the negative binomial to have a larger value of `p`?
+    3. Compare the models using the `loo::compare` function. Which model has the better predictive fit?
+    
+11. The previous analysis could potentially be used for model selection. However, model choice effecively puts zero probability on some types of models, violating [Cromwell's rule](https://en.wikipedia.org/wiki/Cromwell%27s_rule). Another approach is *continuous model expansion*, which is to build a larger model that incorporates special cases and thus allows for model uncertainty; see @BDA3 [Ch 6]. How is the Poisson model a specific case of the negative binomial model? If the Poisson model were "true", what parameter values would you expect to see in the negative binomial model? 
+
+
+[loo]: As discussed in much more detail in @GelmanHwangVehtari2013a, @VehtariGelmanGabry2016a, and @EfronHastie2016a information criteria and cross-validation can be thought of as estimators of the out-of-sample error.
+
 
 # Statistical Simulation
 
@@ -47,10 +128,10 @@ Compare and contrast this to a full Bayesian approach.
 
 The robust regression with Student-t error example uses the following prior on the degrees of freedom parameter.
 $$
-\nu \sim Gamma(2, 0.01)
+\nu \sim \mathrm{Gamma}(2, 0.01)
 $$
 The Student-t distribution is used because it has wider tails and thus is less sensitive to outliers than a normal distribution.
-However, the researcher generally has no information about the value of the degrees of freedom.
+However, the researcher generally has no information about the value of the degrees of freedom. So why was this distribution chosen?
 
 1. Plot this prior distribution, and the values of the 5th and 95th quantiles. You can use `dgamma(x, 2, scale = 0.01)` and `qgamma(x, 2, scale = 0.01)`. What is 
 2. Additionally, the prior is truncated at 2. Why? Hint: What moments of the Student-t distribution are not-defined for values between 2.
@@ -91,21 +172,21 @@ You can draw samples directly from a Student-t with `rt`.
 A quantile-quantile plot ([geom_qq](http://ggplot2.tidyverse.org/reference/geom_qq.html)) or a density plot with the function ([geom_density](http://ggplot2.tidyverse.org/reference/geom_density.html) and [stat_function](http://ggplot2.tidyverse.org/reference/stat_function.html)).
 
 Note: there isn't a right answer to this.
-Well, actually, there is, and you know it. They are equivalent, a proof is in the link.
+Well, actually, there is, and you know it---they are equivalent, a proof is in the link.
 So for credit, do a little work, and show it.
 This pattern appears often, so wrap your head around it.
 
 [^mix]: See [Student-t as a mixture of normals](https://www.johndcook.com/t_normal_mixture.pdf)
 
-# Separation
-
-Continue what was covered in class.
-
-
 # Transformations of Coefficients
 
-@Rainey2016b notes that unbiased estimators of parameters does not imply that transformations of those parameters are unbiased estimators.
+@Rainey2016b notes that unbiased estimators of parameters does not imply that transformations of those parameters are unbiased estimators. 
+See @Carpenter2016a for a more in depth discussion of this.
 
-# Poisson and Negative Binomial Example
+1. One property of frequentist estimators is their bias. Let $\beta$ be the true value of a parameter, and $E(\beta)$ be the expected value of sampling distribution of a statistic, the bias of that statistic is,
+  $$
+  \text{bias}(\hat\beta) = E(\hat{\beta}) - \beta
+  $$
+  Often there is great concern whether an estimator is unbiased on not. How does the property of "bias" apply to Bayesian estimators?
 
-Fill in
+# References {-}
