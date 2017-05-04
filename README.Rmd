@@ -126,14 +126,14 @@ Compare and contrast this to a full Bayesian approach.
 
 # Student-t Prior
 
-The robust regression with Student-t error example uses the following prior on the degrees of freedom parameter.
+The robust regression with Student-t error example uses the following prior on the degrees of freedom parameter, a Gamma distribution with shape 2 and inverse-scale (rate) of 0.1,
 $$
-\nu \sim \mathrm{Gamma}(2, 0.01)
+\nu \sim \mathrm{Gamma}(2, 0.1) .
 $$
 The Student-t distribution is used because it has wider tails and thus is less sensitive to outliers than a normal distribution.
 However, the researcher generally has no information about the value of the degrees of freedom. So why was this distribution chosen?
 
-1. Plot this prior distribution, and the values of the 5th and 95th quantiles. You can use `dgamma(x, 2, scale = 0.01)` and `qgamma(x, 2, scale = 0.01)`. What is 
+1. Plot this prior distribution, and the values of the 5th and 95th quantiles. You can use `dgamma(x, 2, rate = 0.1)` and `qgamma(x, 2, scale = 0.1)`. What is 
 2. Additionally, the prior is truncated at 2. Why? Hint: What moments of the Student-t distribution are not-defined for values between 2.
 
 
