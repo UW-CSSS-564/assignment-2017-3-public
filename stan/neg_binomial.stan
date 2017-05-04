@@ -11,16 +11,18 @@ parameters {
   real a;
   real b;
   // dispersion parameter
-  real<lower = 0.0> phi;    
+  real<lower = 0.> phi_inv;    
 }
 transformed parameters {
-  vector<lower = 0.0>[N] mu;
+  vector<lower = 0.>[N] mu;
+  real<lower = 0.> phi;
+  phi = 1. / phi_inv;
   mu = exp(a + hamilton * b);
 }
 model {
-  a ~ normal(0, 10);
-  b ~ normal(0, 2.5);
-  phi ~ cauchy(0, 1);
+  a ~ normal(0., 10.);
+  b ~ normal(0., 2.5);
+  phi_inv ~ exponential(1.);
   // likelihood
   y ~ neg_binomial_2_lpmf(mu, phi);
 }
