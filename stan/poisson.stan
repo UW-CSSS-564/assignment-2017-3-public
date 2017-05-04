@@ -12,7 +12,7 @@ parameters {
   real b;
 }
 transformed parameters {
-  vector<lower = 0.0, upper = 1.0>[N] lambda;
+  vector<lower = 0.>[N] lambda;
   lambda = exp(a + hamilton * b);
 }
 model {
