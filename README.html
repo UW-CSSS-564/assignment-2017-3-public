@@ -169,7 +169,7 @@ may</code></pre>
   mutate(occur = map2(count, number, rep)) %&gt;%
   unnest(occur) %&gt;%
   select(author, occur) %&gt;%
-  mutate(hamilton = as.integer(author == &quot;hamilton&quot;),
+  mutate(hamilton = as.integer(author == &quot;Hamilton&quot;),
          hamilton_scaled = hamilton - mean(hamilton))
   
 glimpse(may_long)</code></pre>
@@ -177,8 +177,8 @@ glimpse(may_long)</code></pre>
 ## Variables: 4
 ## $ author          &lt;chr&gt; &quot;Hamilton&quot;, &quot;Hamilton&quot;, &quot;Hamilton&quot;, &quot;Hamilton&quot;...
 ## $ occur           &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
-## $ hamilton        &lt;int&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
-## $ hamilton_scaled &lt;dbl&gt; 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...</code></pre>
+## $ hamilton        &lt;int&gt; 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1...
+## $ hamilton_scaled &lt;dbl&gt; 0.5147348, 0.5147348, 0.5147348, 0.5147348, 0....</code></pre>
 <ol style="list-style-type: decimal">
 <li><p>Fit a Poisson model (<code>stan/poisson.stan</code>) to these data with an intercept and a single indicator variable for <code>hamilton</code>: <span class="math display">\[
 \begin{aligned}[t]
@@ -200,7 +200,7 @@ b &amp;\sim N(0, 2.5) \\
 <li><p>Stan provides two parameterizations of the negative binomial distribution: <code>neg_binomial</code> and <code>neg_binomial_2</code>. Describe the parameters used in each, and how these parameters relate to each other. The model provided uses <code>neg_binomial_2</code>. What makes that a more convenient parameterization for our purposes.</p></li>
 <li><p>What does the <span class="math inline">\(\phi\)</span> parameter in the Negative Binomial model do? The Poisson model does not have an equivalent additional parameter; what constraint on the shape of the Poisson distribution does that impose?</p></li>
 <li><p>There are separate parameters for each author in these models. Is this any different than fitting a separate model for each author. Consider both the negative binomial and Poisson models.</p></li>
-<li><p>Both the Poisson and Negative Binomial Models are for “unbounded” counts, and thus allow for potentially infinite values. However, the description notes that each of these chunks has approximately 200 words, so the number of uses of the word “may” cannot be infinite in any particular chunk. This suggests a third model, in which the response is modeled with a Binomial distribution, <code>y ~ binomial(200, mu)</code> Without actually running the models (though nothing is stopping you), would you expect that using a binomial model would have much different results? What are some advantages or disadvantages of the Poisson or Negative Binomial models?</p></li>
+<li><p>Both the Poisson and Negative Binomial Models are for “unbounded” counts, and thus allow for potentially infinite values. However, the description notes that each of these chunks has approximately 200 words, so the number of uses of the word “may” cannot be infinite in any particular chunk. This suggests a third model, in which the response is modeled with a Binomial distribution, <code>y ~ binomial(200, p)</code> where <code>p</code> is the proportion of words that are “may”. Without actually running the models (though nothing is stopping you), would you expect that using a binomial model would have much different results? What are some advantages or disadvantages of the Poisson or Negative Binomial models?</p></li>
 <li><p>For each model, calculate the probability that Hamilton used the word “may” more often. This can be done outside the Stan model, by extracting the parameters from the <code>stanfit</code> object, or within the Stan model, by adding a new variable (the best place to put it would be the <code>generated quantities</code> block).</p></li>
 <li><p>The <code>generated quantities</code> blocks of these models simulate samples from the posterior predictive distribution, and store them in the <code>y_rep</code> variable. Plot the predictive posterior distributions for each model and compare them using the visual methods. See this <a href="https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html">bayesplot vignette</a>.</p></li>
 <li><p>Consider a reasonable test statistic for comparing the model to the data and calculate its posterior predictive p-value for each model. See this <a href="https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html">bayesplot vignette</a>.</p></li>
@@ -219,11 +219,11 @@ b &amp;\sim N(0, 2.5) \\
 </div>
 <div id="student-t-prior" class="section level1">
 <h1><span class="header-section-number">3</span> Student-t Prior</h1>
-<p>The robust regression with Student-t error example uses the following prior on the degrees of freedom parameter. <span class="math display">\[
-\nu \sim \mathrm{Gamma}(2, 0.01)
+<p>The robust regression with Student-t error example uses the following prior on the degrees of freedom parameter, a Gamma distribution with shape 2 and inverse-scale (rate) of 0.1, <span class="math display">\[
+\nu \sim \mathrm{Gamma}(2, 0.1) .
 \]</span> The Student-t distribution is used because it has wider tails and thus is less sensitive to outliers than a normal distribution. However, the researcher generally has no information about the value of the degrees of freedom. So why was this distribution chosen?</p>
 <ol style="list-style-type: decimal">
-<li>Plot this prior distribution, and the values of the 5th and 95th quantiles. You can use <code>dgamma(x, 2, scale = 0.01)</code> and <code>qgamma(x, 2, scale = 0.01)</code>. What is</li>
+<li>Plot this prior distribution, and the values of the 5th and 95th quantiles. You can use <code>dgamma(x, 2, rate = 0.1)</code> and <code>qgamma(x, 2, scale = 0.1)</code>. What is</li>
 <li>Additionally, the prior is truncated at 2. Why? Hint: What moments of the Student-t distribution are not-defined for values between 2.</li>
 </ol>
 </div>
@@ -240,8 +240,8 @@ x_i \sim N(\mu, \lambda_i^2 \gamma^2)
 <p>You can draw a sample from this:</p>
 <pre class="r"><code>df &lt;- 10
 n &lt;- 1000
-sigma &lt;- rgamma(n, 0.5 * df, 0.5 * df)
-x &lt;- rnorm(n, sd = sqrt(1 / sigma ^ 2))</code></pre>
+sigma2 &lt;- rgamma(n, 0.5 * df, 0.5 * df)
+x &lt;- rnorm(n, sd = sqrt(1 / sigma2))</code></pre>
 <p>Plot samples drawn in this way against either samples or theoretical values of the Student-t distribution. Try a few values of the degrees of freedom. Try something small (3) and large (100).</p>
 <p>You can draw samples directly from a Student-t with <code>rt</code>. A quantile-quantile plot (<a href="http://ggplot2.tidyverse.org/reference/geom_qq.html">geom_qq</a>) or a density plot with the function (<a href="http://ggplot2.tidyverse.org/reference/geom_density.html">geom_density</a> and <a href="http://ggplot2.tidyverse.org/reference/stat_function.html">stat_function</a>).</p>
 <p>Note: there isn’t a right answer to this. Well, actually, there is, and you know it—they are equivalent, a proof is in the link. So for credit, do a little work, and show it. This pattern appears often, so wrap your head around it.</p>

@@ -68,7 +68,7 @@ the occurrences:
       mutate(occur = map2(count, number, rep)) %>%
       unnest(occur) %>%
       select(author, occur) %>%
-      mutate(hamilton = as.integer(author == "hamilton"),
+      mutate(hamilton = as.integer(author == "Hamilton"),
              hamilton_scaled = hamilton - mean(hamilton))
       
     glimpse(may_long)
@@ -77,8 +77,8 @@ the occurrences:
     ## Variables: 4
     ## $ author          <chr> "Hamilton", "Hamilton", "Hamilton", "Hamilton"...
     ## $ occur           <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
-    ## $ hamilton        <int> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
-    ## $ hamilton_scaled <dbl> 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0...
+    ## $ hamilton        <int> 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1...
+    ## $ hamilton_scaled <dbl> 0.5147348, 0.5147348, 0.5147348, 0.5147348, 0....
 
 1.  Fit a Poisson model (`stan/poisson.stan`) to these data with an
     intercept and a single indicator variable for `hamilton`:
@@ -133,9 +133,10 @@ the occurrences:
     words, so the number of uses of the word "may" cannot be infinite in
     any particular chunk. This suggests a third model, in which the
     response is modeled with a Binomial distribution,
-    `y ~ binomial(200, mu)` Without actually running the models (though
-    nothing is stopping you), would you expect that using a binomial
-    model would have much different results? What are some advantages or
+    `y ~ binomial(200, p)` where `p` is the proportion of words that are
+    "may". Without actually running the models (though nothing is
+    stopping you), would you expect that using a binomial model would
+    have much different results? What are some advantages or
     disadvantages of the Poisson or Negative Binomial models?
 
 8.  For each model, calculate the probability that Hamilton used the
@@ -198,16 +199,17 @@ Student-t Prior
 ===============
 
 The robust regression with Student-t error example uses the following
-prior on the degrees of freedom parameter.
-*ν* ∼ *G**a**m**m**a*(2, 0.01)
+prior on the degrees of freedom parameter, a Gamma distribution with
+shape 2 and inverse-scale (rate) of 0.1,
+*ν* ∼ *G**a**m**m**a*(2, 0.1).
  The Student-t distribution is used because it has wider tails and thus
 is less sensitive to outliers than a normal distribution. However, the
 researcher generally has no information about the value of the degrees
 of freedom. So why was this distribution chosen?
 
 1.  Plot this prior distribution, and the values of the 5th and 95th
-    quantiles. You can use `dgamma(x, 2, scale = 0.01)` and
-    `qgamma(x, 2, scale = 0.01)`. What is
+    quantiles. You can use `dgamma(x, 2, rate = 0.1)` and
+    `qgamma(x, 2, scale = 0.1)`. What is
 2.  Additionally, the prior is truncated at 2. Why? Hint: What moments
     of the Student-t distribution are not-defined for values between 2.
 
@@ -233,8 +235,8 @@ You can draw a sample from this:
 
     df <- 10
     n <- 1000
-    sigma <- rgamma(n, 0.5 * df, 0.5 * df)
-    x <- rnorm(n, sd = sqrt(1 / sigma ^ 2))
+    sigma2 <- rgamma(n, 0.5 * df, 0.5 * df)
+    x <- rnorm(n, sd = sqrt(1 / sigma2))
 
 Plot samples drawn in this way against either samples or theoretical
 values of the Student-t distribution. Try a few values of the degrees of
