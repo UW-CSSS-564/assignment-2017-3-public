@@ -64,7 +64,7 @@ You can draw a sample from this:
 df <- 10
 n <- 1000
 sigma <- rgamma(n, 0.5 * df, 0.5 * df)
-x <- rnorm(n, sd = sqrt(1 / sigma ^ 2))
+x <- rnorm(n, sd = sqrt(1 / sigma))
 ```
 
 Plot samples drawn in this way against either samples or theoretical values of the Student-t distribution.
