@@ -27,7 +27,7 @@ generated quantities {
   // log-likelihood posterior
   vector[N] log_lik;
   for (i in 1:N) {
-    y_rep[i] = poisson_rng(1, p[i]);
+    y_rep[i] = poisson_rng(lambda[i]);
     log_lik[i] = poisson_lpmf(y[i] | lambda[i]);
   }
 }
