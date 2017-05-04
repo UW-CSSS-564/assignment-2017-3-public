@@ -18,7 +18,10 @@ This assignment will require the following R packages:
 Poisson and Negative Binomial Models
 ====================================
 
-Mosteller and Wallace (1963) analysis of the authorship of disputed
+This problem is based on Bayesian Data Analysis 3 Gelman et al. (2013
+Ch. 17, Ex. 2 and 3).
+
+The Mosteller and Wallace (1963) analysis of the authorship of disputed
 letters in the *The Federalist Papers* records the the word frequency in
 selected articles by Alexander Hamilton and James Madison. The articles
 were divided into blocks of approximately 200 words each, and the number
@@ -26,10 +29,7 @@ of instances of various words in each block were recorded. For
 authorship attribution, they are concerned with the frequency of
 [frequency words](https://en.wikipedia.org/wiki/Function_word). The file
 `data/federalist.csv`contains data on the occurrence of the word "may"
-in these papers.\[^federalist\]
-
-\[federalist\]: This problem is based on Bayesian Data Analysis 3 Gelman
-et al. (2013 Ch. 17, Ex. 2 and 3).
+in these papers.
 
     col_types <- cols(
        author = col_character(),
@@ -58,11 +58,9 @@ et al. (2013 Ch. 17, Ex. 2 and 3).
     ## 14  Madison     6      1
 
 Expand the dataset to have one observation per occurrence. This data
-will be easier to work with given the Stan models seen thus far.
-However, it would be more efficient to work with the original data
-(though the model may seem more confusing). The following code creates
-on observation per block, per author, with a single variable indicating
-the occurrences:
+will be easier to work with given the Stan models seen thus far. The
+following code creates on observation per block, per author, with a
+single variable indicating the occurrences:
 
     may_long <- may %>%
       mutate(occur = map2(count, number, rep)) %>%
@@ -84,7 +82,7 @@ the occurrences:
     intercept and a single indicator variable for `hamilton`:
     $$
     \\begin{aligned}\[t\]
-    y\_i &\\sim \\mathtt{Poisson}(\\lambda\_i) \\\\
+    y\_i &\\sim \\mathrm{Poisson}(\\lambda\_i) \\\\
     \\lambda\_i &= \\exp(a + b \\times \\mathtt{hamilton}\_i) \\\\
     a &\\sim N(0, 10) \\\\
     b &\\sim N(0, 2.5)
@@ -98,14 +96,15 @@ the occurrences:
     prior distribution.
     $$
     \\begin{aligned}\[t\]
-    y\_i &\\sim \\mathtt{Poisson}(\\mu) \\\\
-    \\lambda\_i &= \\exp(a + b \\times \\mathtt{hamilton}\_i) \\\\
+    y\_i &\\sim \\mathrm{NegBinom}(\\mu\_i, \\phi) \\\\
+    \\mu\_i &= \\exp(a + b \\times \\mathtt{hamilton}\_i) \\\\
     a &\\sim N(0, 10) \\\\
     b &\\sim N(0, 2.5) \\\\
+    \\phi &\\sim \\mathrm{Cauchy}^{+}(0, 5)
     \\end{aligned}
     $$
-     Remember to use the mean 0 scaled version of the Hamilton indicator
-    variable.
+     Remember to use the centered (mean zero) version of the Hamilton
+    indicator variable (`hamilton_scaled`).
 
 3.  In these models, what is the support (domain) of the response
     variable? Of the linear predictors
@@ -116,7 +115,7 @@ the occurrences:
     distribution: `neg_binomial` and `neg_binomial_2`. Describe the
     parameters used in each, and how these parameters relate to each
     other. The model provided uses `neg_binomial_2`. What makes that a
-    more convenient parameterization for our purposes.
+    more convenient parameterization for our purposes?
 
 5.  What does the *ϕ* parameter in the Negative Binomial model do? The
     Poisson model does not have an equivalent additional parameter; what
@@ -124,7 +123,7 @@ the occurrences:
     impose?
 
 6.  There are separate parameters for each author in these models. Is
-    this any different than fitting a separate model for each author.
+    this any different than fitting a separate model for each author?
     Consider both the negative binomial and Poisson models.
 
 7.  Both the Poisson and Negative Binomial Models are for "unbounded"
@@ -152,20 +151,32 @@ the occurrences:
     [bayesplot
     vignette](https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html).
 
-10. Consider a reasonable test statistic for comparing the model to the
-    data and calculate its posterior predictive p-value for each model.
-    See this [bayesplot
-    vignette](https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html).
+10. A test statistic is, at its simplest, a function of just the data.
+    For instance, it might be the average of the observations. To
+    perform a hypothesis test, you simply compare the value of the test
+    statistic from the original data to the distribution of the test
+    statistic under the model (i.e. the posterior predictive
+    distribution). To do this, you can simply simulate the posterior
+    predictive many times (say, 5000) and calculate the test statistic
+    for each simulation. If the test statistic for the observed data is
+    far in one of the tails of the sampling from the posterior
+    predictive, there is an indication that your model does not fit the
+    data as well as you might hope.
 
-11. Compare the models using PSIS-LOO statistic. The LOO-PSIS is an
+Define a reasonable test statistic for comparing the model to the data
+and calculate its posterior predictive p-value for each model. See this
+[bayesplot
+vignette](https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html).
+
+1.  Compare the models using PSIS-LOO statistic. The LOO-PSIS is an
     estimator of a model's the *expected* log-likelihood of a new
     (out-of-sample) observation. Read the [loo
     vignette](https://cran.r-project.org/web/packages/loo/vignettes/loo-example.html)
-    for more information.\[^loo\]. WAIC, discussed in McElreath (2016),
-    is also an estimator of the expected out-of-sample error. However,
-    Vehtari, Gelman, and Gabry (2016) show that the more recently
-    developed PSIS-LOO is not much more computationally burdensome and
-    generally has better performance than WAIC.
+    for more information. WAIC, discussed in McElreath (2016), is also
+    an estimator of the expected out-of-sample error. However, Vehtari,
+    Gelman, and Gabry (2016) show that the more recently developed
+    PSIS-LOO is not much more computationally burdensome and generally
+    has better performance than WAIC.
 
     1.  Calculate the PSIS-LOO for each observation and interpret it.
         Use the `loo` function.
@@ -176,7 +187,7 @@ the occurrences:
     3.  Compare the models using the `loo::compare` function. Which
         model has the better predictive fit?
 
-12. The previous analysis could potentially be used for model selection.
+2.  The previous analysis could potentially be used for model selection.
     However, model choice effectively puts zero probability on some
     types of models, violating [Cromwell's
     rule](https://en.wikipedia.org/wiki/Cromwell%27s_rule). Another
@@ -209,9 +220,10 @@ of freedom. So why was this distribution chosen?
 
 1.  Plot this prior distribution, and the values of the 5th and 95th
     quantiles. You can use `dgamma(x, 2, rate = 0.1)` and
-    `qgamma(x, 2, scale = 0.1)`. What is
-2.  Additionally, the prior is truncated at 2. Why? Hint: What moments
-    of the Student-t distribution are not-defined for values between 2.
+    `qgamma(x, 2, scale = 0.1)`.
+2.  Additionally, the prior is truncated at 2. Why? Hint: look up the
+    properties of the t distribution for degrees-of-freedom values less
+    than 2.
 
 Student-t as a Mixture of Normals
 =================================
@@ -222,13 +234,13 @@ represented as normal distributions in which the variances are drawn
 from different distributions. Suppose *X* is distributed Student-t with
 degrees of freedom *ν*, location *μ*, and scale *σ*,
 *X* ∼ *t*<sub>*ν*</sub>(*μ*, *σ*).
- Samples from *Y* can be drawn by
+ Samples from *X* can be drawn by
 *x*<sub>*i*</sub> ∼ *N*(*μ*, *λ*<sub>*i*</sub><sup>2</sup>*γ*<sup>2</sup>)
  If the local variance parameters are distributed inverse-gamma
 1/*λ*<sup>2</sup> ∼ Gamma(*ν*/2, *ν*/2).
 
-Many distributions used in regression shrinkage: Double Exponential
-(Laplace), and Hierarchical Shrinkage (Horseshoe), have this
+Many distributions used in regression shrinkage, such as the Double
+Exponential (Laplace) and Hierarchical Shrinkage (Horseshoe), have this
 representation.
 
 You can draw a sample from this:

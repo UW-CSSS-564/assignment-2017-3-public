@@ -60,7 +60,7 @@ glimpse(may_long)
 1. Fit a Poisson model (`stan/poisson.stan`) to these data with an intercept and a single indicator variable for `hamilton`:
     $$
     \begin{aligned}[t]
-    y_i &\sim \mathtt{Poisson}(\lambda_i) \\
+    y_i &\sim \mathrm{Poisson}(\lambda_i) \\
     \lambda_i &= \exp(a + b \times \mathtt{hamilton}_i) \\
     a &\sim N(0, 10) \\
     b &\sim N(0, 2.5)
@@ -71,14 +71,14 @@ glimpse(may_long)
 2. Fit a Negative Binomial model (`stan/neg_binomial.stan`) to the data with different parameters for each author and a non-informative prior distribution.
     $$
     \begin{aligned}[t]
-    y_i &\sim \mathtt{NegBinom}(\mu_i, \phi) \\
+    y_i &\sim \mathrm{NegBinom}(\mu_i, \phi) \\
     \mu_i &= \exp(a + b \times \mathtt{hamilton}_i) \\
     a &\sim N(0, 10) \\
     b &\sim N(0, 2.5) \\
-    \phi &\sim Unif(0, \infty)
+    \phi &\sim \mathrm{Cauchy}^{+}(0, 5)
     \end{aligned}
     $$
-    Remember to use the mean 0 scaled version of the Hamilton indicator variable.
+    Remember to use the centered (mean zero) version of the Hamilton indicator variable (`hamilton_scaled`).
   
 3. In these models, what is the support (domain) of the response variable? Of the linear predictors $a + b \times \mathtt{hamilton}$, and the expected value ($\lambda$ or $\mu$)? 
 
