@@ -28,11 +28,11 @@ library("tidyverse")
 
 # Poisson and Negative Binomial Models
 
-@MostellerWallace1963a analysis of the authorship of disputed letters in the *The Federalist Papers* records the the word frequency in selected articles by Alexander Hamilton and James Madison.
-The articles were divided into blocks of approximately 200 words each, and the number of instances of various words in each block were recorded. 
-For authorship attribution, they are concerned with the frequency of [frequency words](https://en.wikipedia.org/wiki/Function_word). The file `data/federalist.csv`contains data on the occurrence of the word "may" in these papers.[^federalist]
+This problem is based on Bayesian Data Analysis 3 @BDA3 [Ch. 17, Ex. 2 and 3].
 
-[federalist]: This problem is based on Bayesian Data Analysis 3 @BDA3 [Ch. 17, Ex. 2 and 3].
+The @MostellerWallace1963a analysis of the authorship of disputed letters in the *The Federalist Papers* records the the word frequency in selected articles by Alexander Hamilton and James Madison.
+The articles were divided into blocks of approximately 200 words each, and the number of instances of various words in each block were recorded. 
+For authorship attribution, they are concerned with the frequency of [frequency words](https://en.wikipedia.org/wiki/Function_word). The file `data/federalist.csv`contains data on the occurrence of the word "may" in these papers. 
 
 ```{r}
 col_types <- cols(
@@ -44,10 +44,7 @@ may <- read_csv('data/federalist.csv', col_types = col_types)
 may
 ```
 
-Expand the dataset to have one observation per occurrence.
-This data will be easier to work with given the Stan models seen thus far.
-However, it would be more efficient to work with the original data (though the model may seem more confusing).
-The following code creates on observation per block, per author, with a single variable indicating the occurrences:
+Expand the dataset to have one observation per occurrence. This data will be easier to work with given the Stan models seen thus far. The following code creates on observation per block, per author, with a single variable indicating the occurrences:
 ```{r}
 may_long <- may %>%
   mutate(occur = map2(count, number, rep)) %>%
@@ -74,21 +71,22 @@ glimpse(may_long)
 2. Fit a Negative Binomial model (`stan/neg_binomial.stan`) to the data with different parameters for each author and a non-informative prior distribution.
     $$
     \begin{aligned}[t]
-    y_i &\sim \mathtt{Poisson}(\mu) \\
-    \lambda_i &= \exp(a + b \times \mathtt{hamilton}_i) \\
+    y_i &\sim \mathtt{NegBinom}(\mu_i, \phi) \\
+    \mu_i &= \exp(a + b \times \mathtt{hamilton}_i) \\
     a &\sim N(0, 10) \\
     b &\sim N(0, 2.5) \\
+    \phi &\sim Unif(0, \infty)
     \end{aligned}
     $$
     Remember to use the mean 0 scaled version of the Hamilton indicator variable.
   
 3. In these models, what is the support (domain) of the response variable? Of the linear predictors $a + b \times \mathtt{hamilton}$, and the expected value ($\lambda$ or $\mu$)? 
 
-4. Stan provides two parameterizations of the negative binomial distribution: `neg_binomial` and `neg_binomial_2`. Describe the parameters used in each, and how these parameters relate to each other. The model provided uses `neg_binomial_2`. What makes that a more convenient parameterization for our purposes.
+4. Stan provides two parameterizations of the negative binomial distribution: `neg_binomial` and `neg_binomial_2`. Describe the parameters used in each, and how these parameters relate to each other. The model provided uses `neg_binomial_2`. What makes that a more convenient parameterization for our purposes?
 
 5. What does the $\phi$ parameter in the Negative Binomial model do? The Poisson model does not have an equivalent additional parameter; what constraint on the shape of the Poisson distribution does that impose?
 
-6. There are separate parameters for each author in these models. Is this any different than fitting a separate model for each author. Consider both the negative binomial and Poisson models.
+6. There are separate parameters for each author in these models. Is this any different than fitting a separate model for each author? Consider both the negative binomial and Poisson models.
 
 7. Both the Poisson and Negative Binomial Models are for "unbounded" counts, and thus allow for potentially infinite values. However, the description notes that each of these chunks has approximately 200 words, so the number of uses of the word "may" cannot be infinite in any particular chunk.
   This suggests a third model, in which the response is modeled with a Binomial distribution,
@@ -102,12 +100,12 @@ glimpse(may_long)
 
 8. The `generated quantities` blocks of these models simulate samples from the posterior predictive distribution, and store them in the `y_rep` variable. Plot the predictive posterior distributions for each model and compare them using the visual methods. See this [bayesplot vignette](https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html).
 
-9. Consider a reasonable test statistic for comparing the model to the data and calculate its posterior predictive p-value for each model. See this [bayesplot vignette](https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html).
+9. A test statistic is, at its simplest, a function of just the data. For instance, it might be the average of the observations. To perform a hypothesis test, you simply compare the value of the test statistic from the original data to the distribution of the test statistic under the model (i.e. the posterior predictive distribution). To do this, you can simply simulate the posterior predictive many times (say, 5000) and calculate the test statistic for each simulation. If the test statistic for the observed data is far in one of the tails of the sampling from the posterior predictive, there is an indication that your model does not fit the data as well as you might hope.
+
+Define a reasonable test statistic for comparing the model to the data and calculate its posterior predictive p-value for each model. See this [bayesplot vignette](https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html).
 
 
-10. Compare the models using PSIS-LOO statistic. The LOO-PSIS is an estimator of a model's the *expected* log-likelihood of a new (out-of-sample) observation. Read the [loo vignette](https://cran.r-project.org/web/packages/loo/vignettes/loo-example.html) for more information.[^loo]. 
-WAIC, discussed in @McElreath2016a, is also an estimator of the expected out-of-sample error.
-However, @VehtariGelmanGabry2016a show that the more recently developed PSIS-LOO is not much more computationally burdensome and generally has better performance than WAIC.
+10. Compare the models using PSIS-LOO statistic. The LOO-PSIS is an estimator of a model's the *expected* log-likelihood of a new (out-of-sample) observation. Read the [loo vignette](https://cran.r-project.org/web/packages/loo/vignettes/loo-example.html) for more information. WAIC, discussed in @McElreath2016a, is also an estimator of the expected out-of-sample error. However, @VehtariGelmanGabry2016a show that the more recently developed PSIS-LOO is not much more computationally burdensome and generally has better performance than WAIC.
 
     1. Calculate the PSIS-LOO for each observation and interpret it. Use the `loo` function.
     2. What does the value of `p_loo` mean? How does it compare to the actual number of parameters in the model? Why might it be different? Ex-ante, why would you expect the negative binomial to have a larger value of `p`?
@@ -134,8 +132,8 @@ $$
 The Student-t distribution is used because it has wider tails and thus is less sensitive to outliers than a normal distribution.
 However, the researcher generally has no information about the value of the degrees of freedom. So why was this distribution chosen?
 
-1. Plot this prior distribution, and the values of the 5th and 95th quantiles. You can use `dgamma(x, 2, rate = 0.1)` and `qgamma(x, 2, scale = 0.1)`. What is 
-2. Additionally, the prior is truncated at 2. Why? Hint: What moments of the Student-t distribution are not-defined for values between 2.
+1. Plot this prior distribution, and the values of the 5th and 95th quantiles. You can use `dgamma(x, 2, rate = 0.1)` and `qgamma(x, 2, scale = 0.1)`.
+2. Additionally, the prior is truncated at 2. Why? Hint: look up the properties of the t distribution for degrees-of-freedom values less than 2.
 
 
 # Student-t as a Mixture of Normals
@@ -146,7 +144,7 @@ Suppose $X$ is distributed Student-t with degrees of freedom $\nu$, location $\m
 $$
 X \sim t_{\nu}(\mu, \sigma) .
 $$
-Samples from $Y$ can be drawn by
+Samples from $X$ can be drawn by
 $$
 x_i \sim N(\mu, \lambda_i^2 \gamma^2) 
 $$
@@ -155,7 +153,7 @@ $$
 1 / \lambda^2 \sim \text{Gamma}(\nu / 2, \nu / 2) .
 $$
 
-Many distributions used in regression shrinkage: Double Exponential (Laplace), and Hierarchical Shrinkage (Horseshoe), have this representation.
+Many distributions used in regression shrinkage, such as the Double Exponential (Laplace) and Hierarchical Shrinkage (Horseshoe), have this representation.
 
 You can draw a sample from this:
 ```{r}
