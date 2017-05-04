@@ -81,17 +81,8 @@ This pattern appears often, so wrap your head around it.
 
 [^mix]: See [Student-t as a mixture of normals](https://www.johndcook.com/t_normal_mixture.pdf). See @West1987a and @PolsonScott2011a.
 
-# Separation
-
-See @Rainey2016a.
-Continue what was covered in class.
-
 
 # Transformations of Coefficients
 
 @Rainey2016b notes that unbiased estimators of parameters does not imply that transformations of those parameters are unbiased estimators.
 See @Carpenter2016a for a more detailed discussion of this and working Stan examples for how point estimates are not invariant to transformations, but taking expectations over the posterior distribution is not.
-
-
-
-
