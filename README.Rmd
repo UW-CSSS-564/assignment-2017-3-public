@@ -93,8 +93,9 @@ glimpse(may_long)
 7. Both the Poisson and Negative Binomial Models are for "unbounded" counts, and thus allow for potentially infinite values. However, the description notes that each of these chunks has approximately 200 words, so the number of uses of the word "may" cannot be infinite in any particular chunk.
   This suggests a third model, in which the response is modeled with a Binomial distribution,
   ```
-  y ~ binomial(200, mu)
+  y ~ binomial(200, p)
   ```
+  where `p` is the proportion of words that are "may".
   Without actually running the models (though nothing is stopping you), would you expect that using a binomial model would have much different results? What are some advantages or disadvantages of the Poisson or Negative Binomial models?
   
 8. For each model, calculate the probability that Hamilton used the word "may" more often. This can be done outside the Stan model, by extracting the parameters from the `stanfit` object, or within the Stan model, by adding a new variable (the best place to put it would be the `generated quantities` block).
