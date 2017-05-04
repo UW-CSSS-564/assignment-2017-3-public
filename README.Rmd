@@ -53,7 +53,7 @@ may_long <- may %>%
   mutate(occur = map2(count, number, rep)) %>%
   unnest(occur) %>%
   select(author, occur) %>%
-  mutate(hamilton = as.integer(author == "hamilton"),
+  mutate(hamilton = as.integer(author == "Hamilton"),
          hamilton_scaled = hamilton - mean(hamilton))
   
 glimpse(may_long)
