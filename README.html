@@ -196,7 +196,7 @@ a &amp;\sim N(0, 10) \\
 b &amp;\sim N(0, 2.5) \\
 \phi &amp;\sim \mathrm{Cauchy}^{+}(0, 5)
 \end{aligned}
-\]</span> Remember to use the centered (mean zero) version of the Hamilton indicator variable (<code>hamilton_scaled</code>).</p></li>
+\]</span> Remember to use the centered (mean zero) version of the Hamilton indicator variable (<code>hamilton_scaled</code>). <strong>WARNING:</strong> The <code>stan/neg_binomial.stan</code> model may be slow and produce warning messages. If so, use the alternative <code>stan/neg_binomial_log.stan</code> model which has better numerical stability, and may be faster.</p></li>
 <li><p>In these models, what is the support (domain) of the response variable? Of the linear predictors <span class="math inline">\(a + b \times \mathtt{hamilton}\)</span>, and the expected value (<span class="math inline">\(\lambda\)</span> or <span class="math inline">\(\mu\)</span>)?</p></li>
 <li><p>Stan provides two parameterizations of the negative binomial distribution: <code>neg_binomial</code> and <code>neg_binomial_2</code>. Describe the parameters used in each, and how these parameters relate to each other. The model provided uses <code>neg_binomial_2</code>. What makes that a more convenient parameterization for our purposes?</p></li>
 <li><p>What does the <span class="math inline">\(\phi\)</span> parameter in the Negative Binomial model do? The Poisson model does not have an equivalent additional parameter; what constraint on the shape of the Poisson distribution does that impose?</p></li>
@@ -227,7 +227,7 @@ b &amp;\sim N(0, 2.5) \\
 \nu \sim \mathrm{Gamma}(2, 0.1) .
 \]</span> The Student-t distribution is used because it has wider tails and thus is less sensitive to outliers than a normal distribution. However, the researcher generally has no information about the value of the degrees of freedom. So why was this distribution chosen?</p>
 <ol style="list-style-type: decimal">
-<li>Plot this prior distribution, and the values of the 5th and 95th quantiles. You can use <code>dgamma(x, 2, rate = 0.1)</code> and <code>qgamma(x, 2, scale = 0.1)</code>.</li>
+<li>Plot this prior distribution, and the values of the 5th and 95th quantiles. You can use <code>dgamma(x, 2, rate = 0.1)</code> and <code>qgamma(x, 2, rate = 0.1)</code>.</li>
 <li>Additionally, the prior is truncated at 2. Why? Hint: look up the properties of the t distribution for degrees-of-freedom values less than 2.</li>
 </ol>
 </div>
@@ -315,7 +315,7 @@ $(document).ready(function () {
   (function () {
     var script = document.createElement("script");
     script.type = "text/javascript";
-    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
     document.getElementsByTagName("head")[0].appendChild(script);
   })();
 </script>

@@ -104,7 +104,10 @@ single variable indicating the occurrences:
     \\end{aligned}
     $$
      Remember to use the centered (mean zero) version of the Hamilton
-    indicator variable (`hamilton_scaled`).
+    indicator variable (`hamilton_scaled`). **WARNING:** The
+    `stan/neg_binomial.stan` model may be slow and produce warning
+    messages. If so, use the alternative `stan/neg_binomial_log.stan`
+    model which has better numerical stability, and may be faster.
 
 3.  In these models, what is the support (domain) of the response
     variable? Of the linear predictors
@@ -220,7 +223,7 @@ of freedom. So why was this distribution chosen?
 
 1.  Plot this prior distribution, and the values of the 5th and 95th
     quantiles. You can use `dgamma(x, 2, rate = 0.1)` and
-    `qgamma(x, 2, scale = 0.1)`.
+    `qgamma(x, 2, rate = 0.1)`.
 2.  Additionally, the prior is truncated at 2. Why? Hint: look up the
     properties of the t distribution for degrees-of-freedom values less
     than 2.
