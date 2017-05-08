@@ -10,13 +10,19 @@ parameters {
   // regression coefficients
   real a;
   real b;
-  // reciprocal dispersion parameter
+  // Var(X) = mu + mu^2 / phi 
+  // phi -> infty no dispersion, phi -> 0 is full dispersion
+  // this is 1 / phi, so that phi_reciprocal = 0 is no dispersion
+  real<lower = 0.> phi_reciprocal;
+}
+transformed parameters {
   real<lower = 0.> phi;
+  phi = 1. / phi;
 }
 model {
   a ~ normal(0., 10.);
   b ~ normal(0., 2.5);
-  phi ~ cauchy(0., 5.);
+  phi_reciprocal ~ cauchy(0., 5.);
   // likelihood
   y ~ neg_binomial_2_log(a + b * hamilton, phi);
 }
