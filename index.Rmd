@@ -1,19 +1,20 @@
 ---
 title: 'STAT/CSSS 564: Assignment 3'
 author: Jeff Arnold, Sheridan Grant
-output: 
+output:
   html_document:
+    toc: false
     number_sections: true
   pdf_document:
-    number_sections: true    
-  md_document: default
+    toc: false
+    number_sections: true
 bibliography: assignment3.bib
 date: "May 2nd, 2017"
 ---
 
 # Instructions {-}
 
-1. Fork this repository to your account
+1. Fork the repository <https://github.com/UW-CSSS-564/assignment-2017-3> to your account
 2. Edit the file `solutions.Rmd` with your solutions to the problems.
 3. Submit a pull request to have it graded. Include either or both a HTML and PDF file.
 
@@ -31,8 +32,8 @@ library("tidyverse")
 This problem is based on Bayesian Data Analysis 3 @BDA3 [Ch. 17, Ex. 2 and 3].
 
 The @MostellerWallace1963a analysis of the authorship of disputed letters in the *The Federalist Papers* records the the word frequency in selected articles by Alexander Hamilton and James Madison.
-The articles were divided into blocks of approximately 200 words each, and the number of instances of various words in each block were recorded. 
-For authorship attribution, they are concerned with the frequency of [frequency words](https://en.wikipedia.org/wiki/Function_word). The file `data/federalist.csv`contains data on the occurrence of the word "may" in these papers. 
+The articles were divided into blocks of approximately 200 words each, and the number of instances of various words in each block were recorded.
+For authorship attribution, they are concerned with the frequency of [frequency words](https://en.wikipedia.org/wiki/Function_word). The file `data/federalist.csv`contains data on the occurrence of the word "may" in these papers.
 
 ```{r}
 col_types <- cols(
@@ -52,7 +53,7 @@ may_long <- may %>%
   select(author, occur) %>%
   mutate(hamilton = as.integer(author == "Hamilton"),
          hamilton_scaled = hamilton - mean(hamilton))
-  
+
 glimpse(may_long)
 ```
 
@@ -79,12 +80,12 @@ glimpse(may_long)
     \end{aligned}
     $$
     Remember to use the centered (mean zero) version of the Hamilton indicator variable (`hamilton_scaled`).
-    **WARNING:** The `stan/neg_binomial.stan` model may be slow and produce warning 
+    **WARNING:** The `stan/neg_binomial.stan` model may be slow and produce warning
     messages. If so, use the alternative `stan/neg_binomial_log.stan` model which has
     better numerical stability, and may be faster.
-    
-  
-3. In these models, what is the support (domain) of the response variable? Of the linear predictors $a + b \times \mathtt{hamilton}$, and the expected value ($\lambda$ or $\mu$)? 
+
+
+3. In these models, what is the support (domain) of the response variable? Of the linear predictors $a + b \times \mathtt{hamilton}$, and the expected value ($\lambda$ or $\mu$)?
 
 4. Stan provides two parameterizations of the negative binomial distribution: `neg_binomial` and `neg_binomial_2`. Describe the parameters used in each, and how these parameters relate to each other. The model provided uses `neg_binomial_2`. What makes that a more convenient parameterization for our purposes?
 
@@ -99,7 +100,7 @@ glimpse(may_long)
   ```
   where `p` is the proportion of words that are "may".
   Without actually running the models (though nothing is stopping you), would you expect that using a binomial model would have much different results? What are some advantages or disadvantages of the Poisson or Negative Binomial models?
-  
+
 8. For each model, calculate the probability that Hamilton used the word "may" more often. This can be done outside the Stan model, by extracting the parameters from the `stanfit` object, or within the Stan model, by adding a new variable (the best place to put it would be the `generated quantities` block).
 
 8. The `generated quantities` blocks of these models simulate samples from the posterior predictive distribution, and store them in the `y_rep` variable. Plot the predictive posterior distributions for each model and compare them using the visual methods. See this [bayesplot vignette](https://cran.r-project.org/web/packages/bayesplot/vignettes/PPC.html).
@@ -114,8 +115,8 @@ Define a reasonable test statistic for comparing the model to the data and calcu
     1. Calculate the PSIS-LOO for each observation and interpret it. Use the `loo` function.
     2. What does the value of `p_loo` mean? How does it compare to the actual number of parameters in the model? Why might it be different? Ex-ante, why would you expect the negative binomial to have a larger value of `p`?
     3. Compare the models using the `loo::compare` function. Which model has the better predictive fit?
-    
-11. The previous analysis could potentially be used for model selection. However, model choice effectively puts zero probability on some types of models, violating [Cromwell's rule](https://en.wikipedia.org/wiki/Cromwell%27s_rule). Another approach is *continuous model expansion*, which is to build a larger model that incorporates special cases and thus allows for model uncertainty; see @BDA3 [Ch 6]. How is the Poisson model a specific case of the negative binomial model? If the Poisson model were "true", what parameter values would you expect to see in the negative binomial model? 
+
+11. The previous analysis could potentially be used for model selection. However, model choice effectively puts zero probability on some types of models, violating [Cromwell's rule](https://en.wikipedia.org/wiki/Cromwell%27s_rule). Another approach is *continuous model expansion*, which is to build a larger model that incorporates special cases and thus allows for model uncertainty; see @BDA3 [Ch 6]. How is the Poisson model a specific case of the negative binomial model? If the Poisson model were "true", what parameter values would you expect to see in the negative binomial model?
 
 
 [loo]: As discussed in much more detail in @GelmanHwangVehtari2013a, @VehtariGelmanGabry2016a, and @EfronHastie2016a information criteria and cross-validation can be thought of as estimators of the out-of-sample error.
@@ -150,7 +151,7 @@ X \sim t_{\nu}(\mu, \sigma) .
 $$
 Samples from $X$ can be drawn by
 $$
-x_i \sim N(\mu, \lambda_i^2 \gamma^2) 
+x_i \sim N(\mu, \lambda_i^2 \gamma^2)
 $$
 If the local variance parameters are distributed inverse-gamma
 $$
@@ -168,7 +169,7 @@ x <- rnorm(n, sd = sqrt(1 / sigma2))
 ```
 
 Plot samples drawn in this way against either samples or theoretical values of the Student-t distribution.
-Try a few values of the degrees of freedom. 
+Try a few values of the degrees of freedom.
 Try something small (3) and large (100).
 
 You can draw samples directly from a Student-t with `rt`.
@@ -183,7 +184,7 @@ This pattern appears often, so wrap your head around it.
 
 # Transformations of Coefficients
 
-@Rainey2016b notes that unbiased estimators of parameters does not imply that transformations of those parameters are unbiased estimators. 
+@Rainey2016b notes that unbiased estimators of parameters does not imply that transformations of those parameters are unbiased estimators.
 See @Carpenter2016a for a more in depth discussion of this.
 
 1. One property of frequentist estimators is their bias. Let $\beta$ be the true value of a parameter, and $E(\beta)$ be the expected value of sampling distribution of a statistic, the bias of that statistic is,

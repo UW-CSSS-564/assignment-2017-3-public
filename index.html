@@ -126,7 +126,7 @@ $(document).ready(function () {
 <div id="instructions" class="section level1 unnumbered">
 <h1>Instructions</h1>
 <ol style="list-style-type: decimal">
-<li>Fork this repository to your account</li>
+<li>Fork the repository <a href="https://github.com/UW-CSSS-564/assignment-2017-3" class="uri">https://github.com/UW-CSSS-564/assignment-2017-3</a> to your account</li>
 <li>Edit the file <code>solutions.Rmd</code> with your solutions to the problems.</li>
 <li>Submit a pull request to have it graded. Include either or both a HTML and PDF file.</li>
 </ol>
@@ -147,18 +147,18 @@ library(&quot;tidyverse&quot;)</code></pre>
 )
 may &lt;- read_csv('data/federalist.csv', col_types = col_types)
 may</code></pre>
-<pre><code>## # A tibble: 14 × 3
+<pre><code>## # A tibble: 14 x 3
 ##      author count number
 ##       &lt;chr&gt; &lt;int&gt;  &lt;int&gt;
-## 1  Hamilton     0    128
-## 2  Hamilton     1     67
-## 3  Hamilton     2     32
-## 4  Hamilton     3     14
-## 5  Hamilton     4      4
-## 6  Hamilton     5      1
-## 7  Hamilton     6      1
-## 8   Madison     0    156
-## 9   Madison     1     63
+##  1 Hamilton     0    128
+##  2 Hamilton     1     67
+##  3 Hamilton     2     32
+##  4 Hamilton     3     14
+##  5 Hamilton     4      4
+##  6 Hamilton     5      1
+##  7 Hamilton     6      1
+##  8  Madison     0    156
+##  9  Madison     1     63
 ## 10  Madison     2     29
 ## 11  Madison     3      8
 ## 12  Madison     4      4
@@ -171,7 +171,7 @@ may</code></pre>
   select(author, occur) %&gt;%
   mutate(hamilton = as.integer(author == &quot;Hamilton&quot;),
          hamilton_scaled = hamilton - mean(hamilton))
-  
+
 glimpse(may_long)</code></pre>
 <pre><code>## Observations: 509
 ## Variables: 4
@@ -236,7 +236,7 @@ b &amp;\sim N(0, 2.5) \\
 <p>The Student-t distribution is a scale mixture of normal distributions.<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> This means that a Student-t distribution can be represented as normal distributions in which the variances are drawn from different distributions. Suppose <span class="math inline">\(X\)</span> is distributed Student-t with degrees of freedom <span class="math inline">\(\nu\)</span>, location <span class="math inline">\(\mu\)</span>, and scale <span class="math inline">\(\sigma\)</span>, <span class="math display">\[
 X \sim t_{\nu}(\mu, \sigma) .
 \]</span> Samples from <span class="math inline">\(X\)</span> can be drawn by <span class="math display">\[
-x_i \sim N(\mu, \lambda_i^2 \gamma^2) 
+x_i \sim N(\mu, \lambda_i^2 \gamma^2)
 \]</span> If the local variance parameters are distributed inverse-gamma <span class="math display">\[
 1 / \lambda^2 \sim \text{Gamma}(\nu / 2, \nu / 2) .
 \]</span></p>
